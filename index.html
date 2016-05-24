@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: '微软雅黑';
+        }
+        .box {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
+    <script src="js/data.js"></script>
+    <script src="js/charts.js"></script>
+    <script>
+        window.onload = function() {
+            var canvas = document.getElementById('canvas');
+            var charts = new Charts(canvas, null);
+            charts.init();
+
+
+            var options = {
+                x: charts.width / 2,
+                y: charts.height / 2,
+                width: 300,
+                textWidth: 180,
+                height: 0,
+                fontSize: 14,
+                lineHeight: 20,
+                verticalPadding: 18,
+                marginBottom: 20
+            };
+            charts.createPositionMap(data, options);
+
+            var draw = function() {
+                var origin = charts.origin(options);
+
+                var drawRight = function(data, i, x, y) {
+
+                    var target = data.target;
+
+                    target.forEach(function(item, index) {
+                        var startY = item.$y - data.$boxHeight / 2 + y;
+                        if (item.$boxHeight > item.$height) {
+                            startY += item.$boxHeight / 2 - options.marginBottom;
+                        }
+                        charts.tag({
+                            opts: {
+                                x: x + options.x,
+                                y: startY + options.y,
+                                width: options.width,
+                                height: item.$height,
+                                lineHeight: options.lineHeight,
+                                fontSize: options.fontSize,
+                                verticalPadding: options.verticalPadding
+                            },
+                            textArr: item.$nameArr,
+                            direction: 'right',
+                            index: index + 1,
+                            isShow: item.target && item.target.length,
+                            tagClickCallback: function(data){
+								console.log(data)
+							},
+                            btnClickCallback: function(data){
+								console.log(data)
+							}
+                        }, item);
+                        charts.line({
+                            x: 76 + i * 400 + options.x,
+                            y: y + options.y,
+                            x1: i * 400 + 100 + 76 + options.x,
+                            y1: startY + item.$height / 2 + options.y,
+                            radius: 20
+                        }, {
+                            strokeStyle: '#26afeb'
+                        })
+                        if (item.target && item.target.length) {
+                            drawRight(
+                                item,
+                                i + 1,
+                                x + 400,
+                                startY + item.$height / 2
+                            );
+                        }
+                    })
+                };
+                var drawLeft = function(data, i, x, y) {
+
+                    var source = data.source;
+
+                    source.forEach(function(item, index) {
+                        var startY = item.$y - data.$boxHeight / 2 + y;
+                        if (item.$boxHeight > item.$height) {
+                            startY += item.$boxHeight / 2 - options.marginBottom;
+                        }
+
+                        charts.tag({
+                            opts: {
+                                x: x - 300 + options.x,
+                                y: startY + options.y,
+                                width: options.width,
+                                height: item.$height,
+                                lineHeight: options.lineHeight,
+                                fontSize: options.fontSize,
+                                verticalPadding: options.verticalPadding
+                            },
+                            textArr: item.$nameArr,
+                            direction: 'left',
+                            index: index + 1,
+                            isShow: item.source && item.source.length,
+                            tagClickCallback: null,
+                            btnClickCallback: null
+                        }, item);
+                        charts.line({
+                            x: -76 + -i * 400 + options.x,
+                            y: y + options.y,
+                            x1: -i * 400 - 100 - 76 + options.x,
+                            y1: startY + item.$height / 2 + options.y,
+                            radius: 20
+                        }, {
+                            strokeStyle: '#ebb626'
+                        })
+                        if (item.source && item.source.length) {
+                            drawLeft(
+                                item,
+                                i + 1,
+                                x - 400,
+                                startY + item.$height / 2
+                            );
+                        }
+                    })
+                };
+                data.$y = 0;
+                drawRight(data, 0, 176, 0);
+                drawLeft(data, 0, -176, 0);
+            };
+
+            draw();
+            canvas.addEventListener('mousedown', function(ev) {
+                var x = ev.pageX - options.x;
+                var y = ev.pageY - options.y;
+                var moveFn = function(ev) {
+                    options.x = ev.pageX - x;
+                    options.y = ev.pageY - y;
+                    charts.clean();
+                    draw();
+                };
+                var upFn = function(ev) {
+                    options.x = ev.pageX - x;
+                    options.y = ev.pageY - y;
+                    document.removeEventListener('mousemove', moveFn);
+                    document.removeEventListener('mouseup', upFn);
+                };
+                document.addEventListener('mousemove', moveFn, false);
+                document.addEventListener('mouseup', upFn, false);
+            }, false);
+			console.log(charts)
+        };
+    </script>
+</head>
+
+<body>
+    <div class="box">
+        <canvas id="canvas"></canvas>
+    </div>
+</body>
+
+</html>
